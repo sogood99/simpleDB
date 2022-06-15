@@ -3,14 +3,12 @@ package cn.edu.thssdb.exception;
 public class TableNotExistException extends RuntimeException {
     private String key;
 
-    public TableNotExistException()
-    {
+    public TableNotExistException() {
         super();
         this.key = null;
     }
 
-    public TableNotExistException(String key)
-    {
+    public TableNotExistException(String key) {
         super();
         this.key = key;
     }

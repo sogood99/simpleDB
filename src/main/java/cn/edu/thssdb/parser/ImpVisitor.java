@@ -13,12 +13,12 @@ import cn.edu.thssdb.schema.Manager;
  * the parser will generate a grammar tree according to the rules defined in SQL.g4.
  * The corresponding terms, e.g., "select_stmt" is a root of the parser tree, given the rules
  * "select_stmt :
- *     K_SELECT ( K_DISTINCT | K_ALL )? result_column ( ',' result_column )*
- *         K_FROM table_query ( ',' table_query )* ( K_WHERE multiple_condition )? ;"
- *
+ * K_SELECT ( K_DISTINCT | K_ALL )? result_column ( ',' result_column )*
+ * K_FROM table_query ( ',' table_query )* ( K_WHERE multiple_condition )? ;"
+ * <p>
  * This class "ImpVisit" is used to convert a tree rooted at e.g. "select_stmt"
  * into the collection of tuples inside the database.
- *
+ * <p>
  * We give you a few examples to convert the tree, including create/drop/quit.
  * You need to finish the codes for parsing the other rooted trees marked TODO.
  */
@@ -35,7 +35,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
 
     private Database GetCurrentDB() {
         Database currentDB = manager.getCurrentDatabase();
-        if(currentDB == null) {
+        if (currentDB == null) {
             throw new DatabaseNotExistException();
         }
         return currentDB;
@@ -44,7 +44,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
     public QueryResult visitSql_stmt(SQLParser.Sql_stmtContext ctx) {
         if (ctx.create_db_stmt() != null) return new QueryResult(visitCreate_db_stmt(ctx.create_db_stmt()));
         if (ctx.drop_db_stmt() != null) return new QueryResult(visitDrop_db_stmt(ctx.drop_db_stmt()));
-        if (ctx.use_db_stmt() != null)  return new QueryResult(visitUse_db_stmt(ctx.use_db_stmt()));
+        if (ctx.use_db_stmt() != null) return new QueryResult(visitUse_db_stmt(ctx.use_db_stmt()));
         if (ctx.create_table_stmt() != null) return new QueryResult(visitCreate_table_stmt(ctx.create_table_stmt()));
         if (ctx.drop_table_stmt() != null) return new QueryResult(visitDrop_table_stmt(ctx.drop_table_stmt()));
         if (ctx.insert_stmt() != null) return new QueryResult(visitInsert_stmt(ctx.insert_stmt()));
@@ -56,7 +56,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
     }
 
     /**
-     创建数据库
+     * 创建数据库
      */
     @Override
     public String visitCreate_db_stmt(SQLParser.Create_db_stmtContext ctx) {
@@ -70,7 +70,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
     }
 
     /**
-     删除数据库
+     * 删除数据库
      */
     @Override
     public String visitDrop_db_stmt(SQLParser.Drop_db_stmtContext ctx) {
@@ -83,7 +83,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
     }
 
     /**
-     切换数据库
+     * 切换数据库
      */
     @Override
     public String visitUse_db_stmt(SQLParser.Use_db_stmtContext ctx) {
@@ -96,7 +96,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
     }
 
     /**
-     删除表格
+     * 删除表格
      */
     @Override
     public String visitDrop_table_stmt(SQLParser.Drop_table_stmtContext ctx) {
@@ -110,41 +110,51 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
 
     /**
      * TODO
-     创建表格
+     * 创建表格
      */
     @Override
-    public String visitCreate_table_stmt(SQLParser.Create_table_stmtContext ctx) {return null;}
+    public String visitCreate_table_stmt(SQLParser.Create_table_stmtContext ctx) {
+        return null;
+    }
 
     /**
      * TODO
-     表格项插入
+     * 表格项插入
      */
     @Override
-    public String visitInsert_stmt(SQLParser.Insert_stmtContext ctx) {return null;}
+    public String visitInsert_stmt(SQLParser.Insert_stmtContext ctx) {
+        return null;
+    }
 
     /**
      * TODO
-     表格项删除
+     * 表格项删除
      */
     @Override
-    public String visitDelete_stmt(SQLParser.Delete_stmtContext ctx) {return null;}
+    public String visitDelete_stmt(SQLParser.Delete_stmtContext ctx) {
+        return null;
+    }
 
     /**
      * TODO
-     表格项更新
+     * 表格项更新
      */
     @Override
-    public String visitUpdate_stmt(SQLParser.Update_stmtContext ctx) {return null;}
+    public String visitUpdate_stmt(SQLParser.Update_stmtContext ctx) {
+        return null;
+    }
 
     /**
      * TODO
-     表格项查询
+     * 表格项查询
      */
     @Override
-    public QueryResult visitSelect_stmt(SQLParser.Select_stmtContext ctx) {return null;}
+    public QueryResult visitSelect_stmt(SQLParser.Select_stmtContext ctx) {
+        return null;
+    }
 
     /**
-     退出
+     * 退出
      */
     @Override
     public String visitQuit_stmt(SQLParser.Quit_stmtContext ctx) {

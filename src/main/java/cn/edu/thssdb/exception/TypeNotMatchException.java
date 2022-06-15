@@ -7,17 +7,17 @@ public class TypeNotMatchException extends RuntimeException {
     private ComparerType type1;
     private ComparerType type2;
 
-    public TypeNotMatchException(ComparerType type1, ComparerType type2)
-    {
+    public TypeNotMatchException(ComparerType type1, ComparerType type2) {
         super();
         this.type1 = type1;
         this.type2 = type2;
     }
+
     @Override
     public String getMessage() {
         String message1 = "Null";
         String message2 = "Null";
-        switch(this.type1) {
+        switch (this.type1) {
             case COLUMN:
                 message1 = "Column";
                 break;
@@ -31,7 +31,7 @@ public class TypeNotMatchException extends RuntimeException {
                 message1 = "Null";
                 break;
         }
-        switch(this.type2) {
+        switch (this.type2) {
             case COLUMN:
                 message2 = "Column";
                 break;
