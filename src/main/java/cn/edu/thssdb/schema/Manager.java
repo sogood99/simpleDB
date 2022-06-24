@@ -6,7 +6,10 @@ import cn.edu.thssdb.exception.FileIOException;
 import cn.edu.thssdb.parser.SQLHandler;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -172,6 +175,29 @@ public class Manager {
 
     // TODO: read Log in transaction to recover.
     public void readLog(String databaseName) {
+        String logFilename = get(databaseName).getDatabaseLogFilePath();
+        try {
+            if (Files.exists(Path.of(logFilename))) {
+                FileReader reader = new FileReader(logFilename);
+                String line;
+                BufferedReader bufferedReader = new BufferedReader(reader);
+
+                while ((line = bufferedReader.readLine()) != null) {
+                    System.out.println(line);
+                    long sessionId = Math.max(Collections.max(currentSessions), Collections.max(currentSessions)) + 1;
+                    sqlHandler.evaluate(line, sessionId);
+                }
+                bufferedReader.close();
+                reader.close();
+
+                // clear log
+                PrintWriter clearWriter = new PrintWriter(logFilename);
+                clearWriter.print("");
+                clearWriter.close();
+            }
+        } catch (Exception e) {
+            throw new FileIOException(logFilename);
+        }
     }
 
     public void recover() {
