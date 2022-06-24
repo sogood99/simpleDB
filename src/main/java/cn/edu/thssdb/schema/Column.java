@@ -4,7 +4,6 @@ import cn.edu.thssdb.exception.*;
 import cn.edu.thssdb.type.ColumnType;
 import cn.edu.thssdb.common.Global;
 
-
 public class Column implements Comparable<Column> {
     private String name;
     private ColumnType type;

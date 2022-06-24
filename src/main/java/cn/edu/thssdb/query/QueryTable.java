@@ -12,7 +12,6 @@ import java.util.LinkedList;
  */
 
 public class QueryTable implements Iterator<Row> {
-
     QueryTable() {
         // TODO
     }

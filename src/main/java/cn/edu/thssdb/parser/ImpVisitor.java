@@ -1,14 +1,18 @@
 package cn.edu.thssdb.parser;
 
-
 // TODO: add logic for some important cases, refer to given implementations and SQLBaseVisitor.java for structures
 
 import cn.edu.thssdb.exception.DatabaseNotExistException;
 import cn.edu.thssdb.query.QueryResult;
+import cn.edu.thssdb.schema.Column;
 import cn.edu.thssdb.schema.Database;
 import cn.edu.thssdb.schema.Manager;
+import cn.edu.thssdb.type.ColumnType;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * When use SQL sentence, e.g., "SELECT avg(A) FROM TableX;"
@@ -113,10 +117,60 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
     /**
      * TODO
      * 创建表格
+     * supports create table table_name ( attr1 type1, attr2 type2, attr3 type3 not null primary key)
+     *          create table table_name ( attr1 type1, attr2 type2, attr3 type3 not null, PRIMARY KEY (attr1) )
      */
     @Override
     public String visitCreate_table_stmt(SQLParser.Create_table_stmtContext ctx) {
-        return null;
+        try {
+            Set<String> primaryKeys = new HashSet<>();
+            if (ctx.table_constraint() != null && ctx.table_constraint().K_PRIMARY() != null && ctx.table_constraint().K_KEY() != null) {
+                // PRIMARY KEY (a,b)
+                for (SQLParser.Column_nameContext nameContext : ctx.table_constraint().column_name()) {
+                    primaryKeys.add(nameContext.getText());
+                }
+            }
+
+            List<Column> columnList = new ArrayList<>();
+            for (int i = 0; i < ctx.column_def().size(); i++) {
+                SQLParser.Type_nameContext typeName = ctx.column_def(i).type_name();
+                ColumnType columnType = ColumnType.LONG;
+                int isPrimary = 0;
+                boolean notNull = false;
+                int maxLen = 1;
+                if (typeName.T_STRING() != null) {
+                    columnType = ColumnType.STRING;
+                    maxLen = Integer.parseInt(ctx.column_def(i).type_name().NUMERIC_LITERAL().toString());
+                } else if (typeName.T_INT() != null) {
+                    columnType = ColumnType.INT;
+                } else if (typeName.T_LONG() != null) {
+                    columnType = ColumnType.LONG;
+                } else if (typeName.T_FLOAT() != null) {
+                    columnType = ColumnType.FLOAT;
+                } else if (typeName.T_DOUBLE() != null) {
+                    columnType = ColumnType.DOUBLE;
+                }
+                if (primaryKeys.contains(ctx.column_def(i).column_name().getText())) {
+                    isPrimary = 1;
+                }
+
+                for (SQLParser.Column_constraintContext columnConstraint : ctx.column_def(i).column_constraint()) {
+                    System.out.println(columnConstraint);
+                    if (columnConstraint.K_NOT() != null && columnConstraint.K_NULL() != null) {
+                        notNull = true;
+                    }
+                    if (columnConstraint.K_PRIMARY() != null && columnConstraint.K_KEY() != null) {
+                        isPrimary = 1;
+                    }
+                }
+                Column column = new Column(ctx.table_name().getText(), columnType, isPrimary, notNull, maxLen);
+                columnList.add(column);
+            }
+            GetCurrentDB().create(ctx.table_name().getText(), columnList.toArray(new Column[0]));
+        } catch (Exception e) {
+            return e.getMessage();
+        }
+        return "Create table " + ctx.table_name().getText() + ".";
     }
 
     /**
@@ -125,7 +179,9 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
      */
     @Override
     public String visitInsert_stmt(SQLParser.Insert_stmtContext ctx) {
-        return null;
+
+
+        return "Insert " + ".";
     }
 
     /**

@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-
 public class SQLHandler {
     private final Manager manager;
     private final static String INSERT = "insert";
@@ -115,5 +114,4 @@ public class SQLHandler {
             return results;
         }
     }
-
 }
