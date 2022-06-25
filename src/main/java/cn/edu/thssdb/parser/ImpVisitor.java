@@ -265,7 +265,25 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
      */
     @Override
     public String visitUpdate_stmt(SQLParser.Update_stmtContext ctx) {
-        return "update";
+        String tableName = ctx.table_name().getText();
+        Table table = GetCurrentDB().get(tableName);
+        String attr1 = ctx.column_name().getText();
+        String val1 = ctx.expression().getText();
+        String[] condition = ctx.multiple_condition().getText().split("=");
+
+        int cnt = 0;
+        for (Column column: table.columns) {
+            if (condition[0].equals(column.getColumnName())) break;
+            cnt++;
+        }
+        for (Row row : table) {
+            if (condition[1].equals(row.toStringList().get(cnt))) {
+                Cell primaryCell = row.getEntries().get(table.getPrimaryIndex());
+                Row r = new Row(row);
+                GetCurrentDB().get(tableName).update(primaryCell, r);
+            }
+        }
+        return "Updated table.";
     }
 
     /**
@@ -303,6 +321,17 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
             return e.getMessage();
         }
         return "Quit.";
+    }
+
+    /**
+     * TODO Just redirect to SELECT * from tableName
+     * 展示表格
+     * SHOW TABLE tableName;
+     */
+    @Override
+    public String visitShow_table_stmt(SQLParser.Show_table_stmtContext ctx) {
+
+        return "Shown table.";
     }
 
     public Object visitParse(SQLParser.ParseContext ctx) {
