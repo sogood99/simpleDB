@@ -236,7 +236,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
      */
     @Override
     public String visitDelete_stmt(SQLParser.Delete_stmtContext ctx) {
-        return null;
+        return "Delete";
     }
 
     /**
@@ -261,9 +261,15 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
     public QueryResult visitSelect_stmt(SQLParser.Select_stmtContext ctx) {
         List<QueryTable> queryTables = new ArrayList<>();
         for (int i = 0; i < ctx.table_query().size(); i++) {
-            System.out.println(ctx.table_query(i).getText());
             QueryTable qt = new QueryTable(GetCurrentDB().get(ctx.table_query(i).getText()));
             queryTables.add(qt);
+            if (ctx.K_WHERE() != null) {
+                // parse where
+            }
+            if (ctx.multiple_condition() != null) {
+                System.out.println(ctx.multiple_condition().getText());
+            }
+            System.out.println(ctx.result_column(0).getText());
         }
         return GetCurrentDB().select(queryTables.toArray(new QueryTable[0]));
     }

@@ -164,8 +164,6 @@ public class Database {
         List<Row> rowList = new ArrayList<>();
         List<String> columnNames = new ArrayList<>();
 
-        System.out.println(queryTables.length);
-
         if (queryTables.length == 1) {
             rowList.addAll(queryTables[0].getRow());
             columnNames.addAll(queryTables[0].getColumnNames());
@@ -174,8 +172,8 @@ public class Database {
 
             LinkedList<List<String>> columnNameList = new LinkedList<>(List.of(queryTables[0].getColumnNames(),
                     queryTables[1].getColumnNames()));
-            for (int i = 0; i < queryTables.length; i++) {
-                for (int j = 0; j < queryTables.length; j++) {
+            for (int i = 0; i < queryTables[0].getRow().size(); i++) {
+                for (int j = 0; j < queryTables[1].getRow().size(); j++) {
                     LinkedList<Row> rowPair = new LinkedList<>();
 
                     rowPair.add(queryTables[0].getRow(i));
@@ -185,7 +183,6 @@ public class Database {
             }
             rowList.addAll(concatedRow);
             columnNames.addAll(QueryResult.combineColumn(columnNameList));
-            System.out.println(columnNames);
         } else {
             return new QueryResult("Doesnt support select from more than 2 tables");
         }
