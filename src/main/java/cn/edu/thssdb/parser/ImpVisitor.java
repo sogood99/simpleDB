@@ -2,6 +2,7 @@ package cn.edu.thssdb.parser;
 
 // TODO: add logic for some important cases, refer to given implementations and SQLBaseVisitor.java for structures
 
+import cn.edu.thssdb.common.Pair;
 import cn.edu.thssdb.exception.DatabaseNotExistException;
 import cn.edu.thssdb.exception.ValueFormatInvalidException;
 import cn.edu.thssdb.query.QueryResult;
@@ -173,6 +174,32 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
         return "Create table " + ctx.table_name().getText() + ".";
     }
 
+    private Cell getCellFromType(String literalValue, Column currentCol) {
+        Cell retCell = null;
+        switch (currentCol.getColumnType()) {
+            case INT:
+                Integer vInt = Integer.parseInt(literalValue);
+                retCell = new Cell(vInt);
+                break;
+            case LONG:
+                Long vLong = Long.parseLong(literalValue);
+                retCell = new Cell(vLong);
+                break;
+            case FLOAT:
+                Float vFloat = Float.parseFloat(literalValue);
+                retCell = new Cell(vFloat);
+                break;
+            case DOUBLE:
+                Double vDouble = Double.parseDouble(literalValue);
+                retCell = new Cell(vDouble);
+                break;
+            case STRING:
+                retCell = new Cell(literalValue);
+                break;
+        }
+        return retCell;
+    }
+
     /**
      * TODO: finished
      * 表格项插入 insert
@@ -192,27 +219,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
                     cells.add(new Cell(v));
                 } else if (value.NUMERIC_LITERAL() != null) {
                     String numericStr = value.NUMERIC_LITERAL().getText();
-                    switch (currentCol.getColumnType()) {
-                        case INT:
-                            Integer vInt = Integer.parseInt(numericStr);
-                            cells.add(new Cell(vInt));
-                            break;
-                        case LONG:
-                            Long vLong = Long.parseLong(numericStr);
-                            cells.add(new Cell(vLong));
-                            break;
-                        case FLOAT:
-                            Float vFloat = Float.parseFloat(numericStr);
-                            cells.add(new Cell(vFloat));
-                            break;
-                        case DOUBLE:
-                            Double vDouble = Double.parseDouble(numericStr);
-                            cells.add(new Cell(vDouble));
-                            break;
-                        case STRING:
-                            cells.add(new Cell(numericStr));
-                            break;
-                    }
+                    cells.add(getCellFromType(numericStr, currentCol));
                 } else if (value.K_NULL() != null) {
                     cells.add(new Cell(null));
                 } else {
@@ -238,13 +245,13 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
         Table table = GetCurrentDB().get(tableName);
         String[] condition = ctx.multiple_condition().getText().split("=");
 
-        if (ctx.K_WHERE() == null){
+        if (ctx.K_WHERE() == null) {
             for (Row row : table) {
                 GetCurrentDB().get(tableName).delete(row);
             }
         } else {
             int cnt = 0;
-            for (Column column: table.columns) {
+            for (Column column : table.columns) {
                 if (condition[0].equals(column.getColumnName())) break;
                 cnt++;
             }
@@ -265,7 +272,38 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
      */
     @Override
     public String visitUpdate_stmt(SQLParser.Update_stmtContext ctx) {
-        return "update";
+        String tableName = ctx.table_name().getText();
+        Table table = GetCurrentDB().get(tableName);
+        String attr1 = ctx.column_name().getText();
+        String val1 = ctx.expression().getText();
+        String[] condition = ctx.multiple_condition().getText().split("=");
+        int queryIndex = 0;
+        int attrIndex = 0;
+        Column attrColumn = null;
+
+        for (Column column : table.columns) {
+            if (condition[0].equals(column.getColumnName())) break;
+            queryIndex++;
+        }
+        for (Column column : table.columns) {
+            if (attr1.equals(column.getColumnName())) {
+                attrColumn = column;
+                break;
+            }
+            attrIndex++;
+        }
+        assert attrColumn != null;
+
+        for (Pair<Cell, Row> index : table.index) {
+            if (condition[1].equals(index.right.toStringList().get(queryIndex))) {
+                Row newRow = new Row(index.right);
+                newRow.getEntries().set(attrIndex, getCellFromType(val1, attrColumn));
+                if (index.right == newRow) {
+                    GetCurrentDB().get(tableName).update(index.left, index.right);
+                }
+            }
+        }
+        return "Updated table.";
     }
 
     /**
@@ -303,6 +341,17 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
             return e.getMessage();
         }
         return "Quit.";
+    }
+
+    /**
+     * TODO Just redirect to SELECT * from tableName
+     * 展示表格
+     * SHOW TABLE tableName;
+     */
+    @Override
+    public String visitShow_table_stmt(SQLParser.Show_table_stmtContext ctx) {
+
+        return "Shown table.";
     }
 
     public Object visitParse(SQLParser.ParseContext ctx) {
