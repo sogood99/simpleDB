@@ -3,12 +3,13 @@ package cn.edu.thssdb.parser;
 // TODO: add logic for some important cases, refer to given implementations and SQLBaseVisitor.java for structures
 
 import cn.edu.thssdb.exception.DatabaseNotExistException;
+import cn.edu.thssdb.exception.TypeNotMatchException;
+import cn.edu.thssdb.exception.ValueFormatInvalidException;
 import cn.edu.thssdb.query.QueryResult;
-import cn.edu.thssdb.schema.Column;
-import cn.edu.thssdb.schema.Database;
-import cn.edu.thssdb.schema.Manager;
+import cn.edu.thssdb.schema.*;
 import cn.edu.thssdb.type.ColumnType;
 
+import java.rmi.UnexpectedException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -179,9 +180,51 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
      */
     @Override
     public String visitInsert_stmt(SQLParser.Insert_stmtContext ctx) {
+        List<Column> column = manager.currentDatabase.get(ctx.table_name().getText()).columns;
+        for (int i = 0; i < ctx.value_entry().size(); i++) {
+            SQLParser.Value_entryContext valueEntry = ctx.value_entry(i);
 
+            List<Cell> cells = new ArrayList<>();
+            for (int j = 0; j < valueEntry.literal_value().size(); j++) {
+                SQLParser.Literal_valueContext value = valueEntry.literal_value(j);
+                Column currentCol = column.get(j);
+                if (value.STRING_LITERAL() != null) {
+                    String v = value.STRING_LITERAL().getText();
+                    cells.add(new Cell(v));
+                } else if (value.NUMERIC_LITERAL() != null) {
+                    String numericStr = value.NUMERIC_LITERAL().getText();
+                    switch (currentCol.getColumnType()) {
+                        case INT:
+                            Integer vInt = Integer.parseInt(numericStr);
+                            cells.add(new Cell(vInt));
+                            break;
+                        case LONG:
+                            Long vLong = Long.parseLong(numericStr);
+                            cells.add(new Cell(vLong));
+                            break;
+                        case FLOAT:
+                            Float vFloat = Float.parseFloat(numericStr);
+                            cells.add(new Cell(vFloat));
+                            break;
+                        case DOUBLE:
+                            Double vDouble = Double.parseDouble(numericStr);
+                            cells.add(new Cell(vDouble));
+                            break;
+                        case STRING:
+                            cells.add(new Cell(numericStr));
+                            break;
+                    }
+                } else if (value.K_NULL() != null) {
+                    cells.add(new Cell(null));
+                } else {
+                    throw new ValueFormatInvalidException("Type not found");
+                }
 
-        return "Insert " + ".";
+            }
+            Row row = new Row(cells.toArray(new Cell[0]));
+            GetCurrentDB().get(ctx.table_name().getText()).insert(row);
+        }
+        return "Inserted into " + ctx.table_name().getText() + ".";
     }
 
     /**
@@ -199,7 +242,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
      */
     @Override
     public String visitUpdate_stmt(SQLParser.Update_stmtContext ctx) {
-        return null;
+        return "update";
     }
 
     /**
@@ -208,7 +251,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
      */
     @Override
     public QueryResult visitSelect_stmt(SQLParser.Select_stmtContext ctx) {
-        return null;
+        return new QueryResult("Select not set");
     }
 
     /**

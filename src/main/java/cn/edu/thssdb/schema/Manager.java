@@ -31,6 +31,7 @@ public class Manager {
 
     public Manager() {
         // TODO: init possible additional variables
+        currentSessions = new ArrayList<>();
         databases = new HashMap<>();
         currentDatabase = null;
         sqlHandler = new SQLHandler(this);
@@ -191,9 +192,9 @@ public class Manager {
                 reader.close();
 
                 // clear log
-                PrintWriter clearWriter = new PrintWriter(logFilename);
-                clearWriter.print("");
-                clearWriter.close();
+//                PrintWriter clearWriter = new PrintWriter(logFilename);
+//                clearWriter.print("");
+//                clearWriter.close();
             }
         } catch (Exception e) {
             throw new FileIOException(logFilename);
