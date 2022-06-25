@@ -1,10 +1,14 @@
 package cn.edu.thssdb.query;
 
 
+import cn.edu.thssdb.exception.ValueFormatInvalidException;
+import cn.edu.thssdb.schema.Cell;
+import cn.edu.thssdb.schema.Column;
 import cn.edu.thssdb.schema.MetaInfo;
 import cn.edu.thssdb.schema.Row;
 import cn.edu.thssdb.type.QueryResultType;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -28,7 +32,22 @@ public class QueryResult {
     public QueryResult(QueryTable[] queryTables) {
         this.resultType = QueryResultType.SELECT;
         this.errorMessage = null;
-        // TODO
+        // TODO : finished
+        // initialize variable
+        columnNames = new ArrayList<>();
+        results = new ArrayList<>();
+        metaInfoInfos = new ArrayList<>();
+
+        if (queryTables.length != 0) {
+            for (Column col : queryTables[0].getColumns()) {
+                columnNames.add(col.getColumnName());
+            }
+        }
+        for (QueryTable qt : queryTables) {
+            while (qt.hasNext()) {
+                results.add(qt.next());
+            }
+        }
     }
 
     public QueryResult(String errorMessage) {
@@ -38,12 +57,19 @@ public class QueryResult {
 
     public static Row combineRow(LinkedList<Row> rows) {
         // TODO
-        return null;
+        List<Cell> cellList = new ArrayList<>();
+        for (Row r : rows) {
+            cellList.addAll(r.getEntries());
+        }
+        Row resultRow = new Row((ArrayList<Cell>) cellList);
+        return resultRow;
     }
 
     public Row generateQueryRecord(Row row) {
-        // TODO
-        return null;
+        // TODO: probably no use
+//        metaInfoInfos.add(new MetaInfo("tempTable", columnNames));
+        throw new ValueFormatInvalidException("Not doing this rn");
+//        return null;
     }
 
     public List<String> getColumnNames() {

@@ -1,9 +1,9 @@
 package cn.edu.thssdb.query;
 
+import cn.edu.thssdb.schema.Column;
 import cn.edu.thssdb.schema.Row;
 
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.*;
 
 /**
  * Designed for the select query with join/filtering...
@@ -12,19 +12,37 @@ import java.util.LinkedList;
  */
 
 public class QueryTable implements Iterator<Row> {
-    QueryTable() {
-        // TODO
+    private List<Row> rows;
+    private List<Column> columns;
+    private Iterator<Row> rowListIterator;
+
+    QueryTable(List<Row> tRows, List<Column> tColumns) {
+        // TODO :
+        rows = new ArrayList<>(tRows);
+        columns = new ArrayList<>(tColumns);
+        rowListIterator = rows.iterator();
     }
 
     @Override
     public boolean hasNext() {
-        // TODO
-        return true;
+        // TODO:
+        return rowListIterator.hasNext();
     }
 
     @Override
     public Row next() {
         // TODO
-        return null;
+        return rowListIterator.next();
+    }
+
+    public Row getFirst() {
+        if (rows.isEmpty()) {
+            return null;
+        }
+        return rows.get(0);
+    }
+
+    public List<Column> getColumns() {
+        return columns;
     }
 }

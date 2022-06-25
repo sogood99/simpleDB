@@ -116,8 +116,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
     }
 
     /**
-     * TODO
-     * finished
+     * TODO: finished
      * 创建表格
      * supports create table table_name ( attr1 type1, attr2 type2, attr3 type3 not null primary key)
      *          create table table_name ( attr1 type1, attr2 type2, attr3 type3 not null, PRIMARY KEY (attr1) )
@@ -176,8 +175,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
     }
 
     /**
-     * TODO
-     * finished
+     * TODO: finished
      * 表格项插入
      */
     @Override
