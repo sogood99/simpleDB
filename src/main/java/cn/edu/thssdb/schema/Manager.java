@@ -13,7 +13,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-// TODO: add lock control
+// TODO: add lock control : finished
 // TODO: complete readLog() function according to writeLog() for recovering transaction
 
 public class Manager {
@@ -45,7 +45,7 @@ public class Manager {
 
     public void deleteDatabase(String databaseName) {
         try {
-            // TODO: add lock control
+            // TODO: add lock control : finished
             lock.writeLock().lock();
             if (!databases.containsKey(databaseName))
                 throw new DatabaseNotExistException(databaseName);
@@ -54,20 +54,20 @@ public class Manager {
             databases.remove(databaseName);
 
         } finally {
-            // TODO: add lock control
+            // TODO: add lock control : finished
             lock.writeLock().unlock();
         }
     }
 
     public void switchDatabase(String databaseName) {
         try {
-            // TODO: add lock control
+            // TODO: add lock control : finished
             lock.readLock().lock();
             if (!databases.containsKey(databaseName))
                 throw new DatabaseNotExistException(databaseName);
             currentDatabase = databases.get(databaseName);
         } finally {
-            // TODO: add lock control
+            // TODO: add lock control : finished
             lock.readLock().unlock();
         }
     }
@@ -101,37 +101,37 @@ public class Manager {
 
     public Database get(String databaseName) {
         try {
-            // TODO: add lock control
+            // TODO: add lock control : finished
             lock.readLock().lock();
             if (!databases.containsKey(databaseName))
                 throw new DatabaseNotExistException(databaseName);
             return databases.get(databaseName);
         } finally {
-            // TODO: add lock control
+            // TODO: add lock control : finished
             lock.readLock().unlock();
         }
     }
 
     public void createDatabaseIfNotExists(String databaseName) {
         try {
-            // TODO: add lock control
+            // TODO: add lock control : finished
             lock.writeLock().lock();
             if (!databases.containsKey(databaseName))
                 databases.put(databaseName, new Database(databaseName));
             if (currentDatabase == null) {
                 try {
-                    // TODO: add lock control
+                    // TODO: add lock control : finished
                     lock.readLock().lock();
                     if (!databases.containsKey(databaseName))
                         throw new DatabaseNotExistException(databaseName);
                     currentDatabase = databases.get(databaseName);
                 } finally {
-                    // TODO: add lock control
+                    // TODO: add lock control : finished
                     lock.readLock().unlock();
                 }
             }
         } finally {
-            // TODO: add lock control
+            // TODO: add lock control : finished
             lock.writeLock().unlock();
         }
     }
@@ -151,13 +151,13 @@ public class Manager {
 
     public void persistDatabase(String databaseName) {
         try {
-            // TODO: add lock control
+            // TODO: add lock control : finished
             lock.writeLock().lock();
             Database database = databases.get(databaseName);
             database.quit();
             persist();
         } finally {
-            // TODO: add lock control
+            // TODO: add lock control : finished
             lock.writeLock().unlock();
         }
     }
@@ -175,7 +175,7 @@ public class Manager {
         }
     }
 
-    // TODO: read Log in transaction to recover.
+    // TODO: read Log in transaction to recover. : finished
     public void readLog(String databaseName) {
         String logFilename = get(databaseName).getDatabaseLogFilePath();
         try {
