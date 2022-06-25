@@ -117,6 +117,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
 
     /**
      * TODO
+     * finished
      * 创建表格
      * supports create table table_name ( attr1 type1, attr2 type2, attr3 type3 not null primary key)
      *          create table table_name ( attr1 type1, attr2 type2, attr3 type3 not null, PRIMARY KEY (attr1) )
@@ -176,6 +177,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
 
     /**
      * TODO
+     * finished
      * 表格项插入
      */
     @Override
@@ -251,6 +253,9 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
      */
     @Override
     public QueryResult visitSelect_stmt(SQLParser.Select_stmtContext ctx) {
+        for (int i = 0; i < ctx.table_query().size(); i++) {
+            System.out.println(ctx.table_query(i));
+        }
         return new QueryResult("Select not set");
     }
 

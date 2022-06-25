@@ -32,6 +32,7 @@ public class Manager {
     public Manager() {
         // TODO: init possible additional variables
         currentSessions = new ArrayList<>();
+        waitSessions = new ArrayList<>();
         databases = new HashMap<>();
         currentDatabase = null;
         sqlHandler = new SQLHandler(this);
@@ -183,9 +184,16 @@ public class Manager {
                 String line;
                 BufferedReader bufferedReader = new BufferedReader(reader);
 
+                // get a sessionId not used
+                long sessionId = 0;
+                if (!currentSessions.isEmpty()) {
+                    sessionId = Collections.max(currentSessions);
+                }
+                if (!waitSessions.isEmpty()) {
+                    sessionId = Math.max(sessionId, Collections.max(waitSessions));
+                }
+                sessionId++;
                 while ((line = bufferedReader.readLine()) != null) {
-                    System.out.println(line);
-                    long sessionId = Math.max(Collections.max(currentSessions), Collections.max(currentSessions)) + 1;
                     sqlHandler.evaluate(line, sessionId);
                 }
                 bufferedReader.close();
@@ -197,6 +205,7 @@ public class Manager {
 //                clearWriter.close();
             }
         } catch (Exception e) {
+            System.out.println(e.toString());
             throw new FileIOException(logFilename);
         }
     }
