@@ -3,14 +3,12 @@ package cn.edu.thssdb.parser;
 // TODO: add logic for some important cases, refer to given implementations and SQLBaseVisitor.java for structures
 
 import cn.edu.thssdb.exception.DatabaseNotExistException;
-import cn.edu.thssdb.exception.TypeNotMatchException;
 import cn.edu.thssdb.exception.ValueFormatInvalidException;
 import cn.edu.thssdb.query.QueryResult;
 import cn.edu.thssdb.query.QueryTable;
 import cn.edu.thssdb.schema.*;
 import cn.edu.thssdb.type.ColumnType;
 
-import java.rmi.UnexpectedException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;

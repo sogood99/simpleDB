@@ -26,7 +26,7 @@ public class QueryTable implements Iterator<Row> {
     }
 
     public QueryTable(List<Row> tRows, List<String> tColumnNames) {
-        // TODO
+        // TODO: finished
         rows = new ArrayList<>(tRows);
         columnNames = tColumnNames;
 
@@ -42,7 +42,7 @@ public class QueryTable implements Iterator<Row> {
 //    }
 
     public QueryTable(Table t) {
-        // TODO
+        // TODO: finished
         rows = new ArrayList<>();
         columnNames = column2ColumnName(t.columns);
 
@@ -57,13 +57,13 @@ public class QueryTable implements Iterator<Row> {
 
     @Override
     public boolean hasNext() {
-        // TODO:
+        // TODO: finished
         return rowListIterator.hasNext();
     }
 
     @Override
     public Row next() {
-        // TODO
+        // TODO: finished
         return rowListIterator.next();
     }
 
