@@ -56,31 +56,36 @@ public class Database {
 
     public void create(String tableName, Column[] columns) {
         try {
-            // TODO add lock control.
+            // TODO add lock control. finished
+            lock.writeLock().lock();
             if (this.tableMap.containsKey(tableName))
                 throw new DuplicateTableException(tableName);
             Table table = new Table(this.databaseName, tableName, columns);
             this.tableMap.put(tableName, table);
             this.persist();
         } finally {
-            // TODO add lock control.
+            // TODO add lock control. finished
+            lock.writeLock().unlock();
         }
     }
 
     public Table get(String tableName) {
         try {
-            // TODO add lock control.
+            // TODO add lock control. finished
+            lock.readLock().lock();
             if (!this.tableMap.containsKey(tableName))
                 throw new TableNotExistException(tableName);
             return this.tableMap.get(tableName);
         } finally {
-            // TODO add lock control.
+            // TODO add lock control. finished
+            lock.readLock().unlock();
         }
     }
 
     public void drop(String tableName) {
         try {
-            // TODO add lock control.
+            // TODO add lock control. finished
+            lock.writeLock().lock();
             if (!this.tableMap.containsKey(tableName))
                 throw new TableNotExistException(tableName);
             Table table = this.tableMap.get(tableName);
@@ -92,13 +97,15 @@ public class Database {
             table.dropTable();
             this.tableMap.remove(tableName);
         } finally {
-            // TODO add lock control.
+            // TODO add lock control. finished
+            lock.writeLock().unlock();
         }
     }
 
     public void dropDatabase() {
         try {
-            // TODO add lock control.
+            // TODO add lock control. finished
+            lock.writeLock().lock();
             for (Table table : this.tableMap.values()) {
                 File file = new File(table.getTableMetaPath());
                 if (file.isFile() && !file.delete())
@@ -108,7 +115,8 @@ public class Database {
             this.tableMap.clear();
             this.tableMap = null;
         } finally {
-            // TODO add lock control.
+            // TODO add lock control. finished
+            lock.writeLock().unlock();
         }
     }
 
@@ -161,35 +169,37 @@ public class Database {
     public QueryResult select(QueryTable[] queryTables) {
         // TODO: support select operations
         // return combined row from select from query table
-        List<Row> rowList = new ArrayList<>();
-        List<String> columnNames = new ArrayList<>();
+        try {
+            lock.readLock().lock();
+            List<Row> rowList = new ArrayList<>();
+            List<String> columnNames = new ArrayList<>();
 
-        System.out.println(queryTables.length);
+            if (queryTables.length == 1) {
+                rowList.addAll(queryTables[0].getRow());
+                columnNames.addAll(queryTables[0].getColumnNames());
+            } else if (queryTables.length == 2) {
+                List<Row> concatedRow = new ArrayList<>();
 
-        if (queryTables.length == 1) {
-            rowList.addAll(queryTables[0].getRow());
-            columnNames.addAll(queryTables[0].getColumnNames());
-        } else if (queryTables.length == 2) {
-            List<Row> concatedRow = new ArrayList<>();
+                LinkedList<List<String>> columnNameList = new LinkedList<>(List.of(queryTables[0].getColumnNames(),
+                        queryTables[1].getColumnNames()));
+                for (int i = 0; i < queryTables[0].getRow().size(); i++) {
+                    for (int j = 0; j < queryTables[1].getRow().size(); j++) {
+                        LinkedList<Row> rowPair = new LinkedList<>();
 
-            LinkedList<List<String>> columnNameList = new LinkedList<>(List.of(queryTables[0].getColumnNames(),
-                    queryTables[1].getColumnNames()));
-            for (int i = 0; i < queryTables.length; i++) {
-                for (int j = 0; j < queryTables.length; j++) {
-                    LinkedList<Row> rowPair = new LinkedList<>();
-
-                    rowPair.add(queryTables[0].getRow(i));
-                    rowPair.add(queryTables[1].getRow(j));
-                    concatedRow.add(QueryResult.combineRow(rowPair));
+                        rowPair.add(queryTables[0].getRow(i));
+                        rowPair.add(queryTables[1].getRow(j));
+                        concatedRow.add(QueryResult.combineRow(rowPair));
+                    }
                 }
+                rowList.addAll(concatedRow);
+                columnNames.addAll(QueryResult.combineColumn(columnNameList));
+            } else {
+                return new QueryResult("Doesnt support select from more than 2 tables");
             }
-            rowList.addAll(concatedRow);
-            columnNames.addAll(QueryResult.combineColumn(columnNameList));
-            System.out.println(columnNames);
-        } else {
-            return new QueryResult("Doesnt support select from more than 2 tables");
+            return new QueryResult(new QueryTable(rowList, columnNames));
+        } finally {
+            lock.readLock().unlock();
         }
-        return new QueryResult(new QueryTable(rowList, columnNames));
     }
 
 
