@@ -309,25 +309,39 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
     /**
      * TODO
      * 表格查询 select
-     * SELECT column1 FROM table1
-     * SELECT column1, column2 FROM table1, table2 WHERE attr1=value1
-     * SELECT table1.column1, table2.column2 FROM table1, table2 WHERE table1.attr1=table2.attr1
+     * SELECT tableName1.AttrName1, tableName1.AttrName2…, tableName2.AttrName1, tableName2.AttrName2,…
+     * FROM tableName1 [JOIN tableName2 [ON tableName1.attrName1 = tableName2.attrName2]] [ WHERE table1.attrName1 = attrValue ]
+     * <p>
+     * current select only supports select * from table;
      */
     @Override
     public QueryResult visitSelect_stmt(SQLParser.Select_stmtContext ctx) {
         List<QueryTable> queryTables = new ArrayList<>();
-        for (int i = 0; i < ctx.table_query().size(); i++) {
-            QueryTable qt = new QueryTable(GetCurrentDB().get(ctx.table_query(i).getText()));
-            queryTables.add(qt);
-            if (ctx.K_WHERE() != null) {
-                // parse where
-            }
-            if (ctx.multiple_condition() != null) {
-                System.out.println(ctx.multiple_condition().getText());
-            }
-            System.out.println(ctx.result_column(0).getText());
+        for (int i = 0; i < ctx.table_query(0).table_name().size(); i++) {
+            queryTables.add(new QueryTable(GetCurrentDB().get(ctx.table_query(0).table_name(i).getText())));
         }
-        return GetCurrentDB().select(queryTables.toArray(new QueryTable[0]));
+
+        String onStatement = null;
+        List<String> onEqualStatement = null;
+        if (ctx.table_query(0).multiple_condition() != null) {
+            onStatement = ctx.table_query(0).multiple_condition().getText();
+            onEqualStatement = new ArrayList<>(List.of(onStatement.split("=")));
+        }
+
+        String whereStatement = null;
+        List<String> whereEqualStatement = null;
+        if (ctx.multiple_condition() != null) {
+            whereStatement = ctx.multiple_condition().getText();
+            whereEqualStatement = new ArrayList<>(List.of(whereStatement.split("=")));
+        }
+
+        List<String> resultColumns = new ArrayList<>();
+
+        for (SQLParser.Result_columnContext res : ctx.result_column()) {
+            resultColumns.add(res.getText());
+        }
+
+        return GetCurrentDB().select(queryTables.toArray(new QueryTable[0]), resultColumns, onEqualStatement, whereEqualStatement);
     }
 
     /**
@@ -349,9 +363,8 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
      * SHOW TABLE tableName;
      */
     @Override
-    public String visitShow_table_stmt(SQLParser.Show_table_stmtContext ctx) {
-
-        return "Shown table.";
+    public QueryResult visitShow_table_stmt(SQLParser.Show_table_stmtContext ctx) {
+        return null;
     }
 
     public Object visitParse(SQLParser.ParseContext ctx) {

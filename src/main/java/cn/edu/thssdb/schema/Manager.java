@@ -185,16 +185,8 @@ public class Manager {
                 BufferedReader bufferedReader = new BufferedReader(reader);
 
                 // get a sessionId not used
-                long sessionId = 0;
-                if (!currentSessions.isEmpty()) {
-                    sessionId = Collections.max(currentSessions);
-                }
-                if (!waitSessions.isEmpty()) {
-                    sessionId = Math.max(sessionId, Collections.max(waitSessions));
-                }
-                sessionId++;
                 while ((line = bufferedReader.readLine()) != null) {
-                    sqlHandler.evaluate(line, sessionId);
+                    sqlHandler.evaluate(line, 0);
                 }
                 bufferedReader.close();
                 reader.close();

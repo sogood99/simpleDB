@@ -166,7 +166,8 @@ public class Database {
 
 
     // TODO Query: please also add other functions needed at Database level.
-    public QueryResult select(QueryTable[] queryTables) {
+    public QueryResult select(QueryTable[] queryTables, List<String> resultColumn, List<String> onEqualStatement,
+                              List<String> whereEqualStatement) {
         // TODO: support select operations
         // return combined row from select from query table
         try {
@@ -176,27 +177,69 @@ public class Database {
 
             if (queryTables.length == 1) {
                 rowList.addAll(queryTables[0].getRow());
-                columnNames.addAll(queryTables[0].getColumnNames());
+                for (String cName : queryTables[0].getColumnNames()) {
+                    columnNames.add(queryTables[0].getTableName() + "." + cName);
+                }
             } else if (queryTables.length == 2) {
-                List<Row> concatedRow = new ArrayList<>();
+                List<Row> concatRow = new ArrayList<>();
 
-                LinkedList<List<String>> columnNameList = new LinkedList<>(List.of(queryTables[0].getColumnNames(),
-                        queryTables[1].getColumnNames()));
                 for (int i = 0; i < queryTables[0].getRow().size(); i++) {
                     for (int j = 0; j < queryTables[1].getRow().size(); j++) {
                         LinkedList<Row> rowPair = new LinkedList<>();
 
                         rowPair.add(queryTables[0].getRow(i));
                         rowPair.add(queryTables[1].getRow(j));
-                        concatedRow.add(QueryResult.combineRow(rowPair));
+                        concatRow.add(QueryResult.combineRow(rowPair));
                     }
                 }
-                rowList.addAll(concatedRow);
-                columnNames.addAll(QueryResult.combineColumn(columnNameList));
-            } else {
-                return new QueryResult("Doesnt support select from more than 2 tables");
+                rowList.addAll(concatRow);
+
+                // concat column names
+                for (int i = 0; i < 2; i++) {
+                    for (String cName : queryTables[i].getColumnNames()) {
+                        columnNames.add(queryTables[i].getTableName() + "." + cName);
+                    }
+                }
             }
-            return new QueryResult(new QueryTable(rowList, columnNames));
+            List<Integer> columnIndexFromResult = new ArrayList<>();
+
+            if (!(resultColumn.size() == 1 && resultColumn.get(0).equals("*"))) {
+                // actually need to filter columns
+                for (int i = 0; i < resultColumn.size(); i++) {
+                    Integer matchIndex = columnNames.indexOf(resultColumn.get(i));
+                    if (matchIndex >= 0) {
+                        columnIndexFromResult.add(matchIndex);
+                    } else {
+                        return new QueryResult("Column Name Not Found");
+                    }
+                }
+                columnNames = resultColumn;
+            } else {
+                for (int i = 0; i < columnNames.size(); i++) {
+                    columnIndexFromResult.add(i);
+                }
+            }
+
+            ArrayList<Row> projectedRow = new ArrayList<>();
+
+            // everything is good, we have a match for each query
+            for (int i = 0; i < rowList.size(); i++) {
+                Row srcRow = rowList.get(i);
+
+                ArrayList<Cell> newRowCellList = new ArrayList<>();
+                for (int index : columnIndexFromResult) {
+                    newRowCellList.add(new Cell(srcRow.getEntries().get(index)));
+                }
+
+                Row targetRow = new Row(newRowCellList);
+                projectedRow.add(targetRow);
+            }
+
+
+            return new QueryResult(new QueryTable(projectedRow, columnNames));
+
+            // gives rowList that is concatenated
+            // then filter by on
         } finally {
             lock.readLock().unlock();
         }
@@ -230,7 +273,8 @@ public class Database {
     }
 
     public String toString() {
-        if (this.tableMap.isEmpty()) return "{\n[DatabaseName: " + databaseName + "]\n" + Global.DATABASE_EMPTY + "}\n";
+        if (this.tableMap.isEmpty())
+            return "{\n[DatabaseName: " + databaseName + "]\n" + Global.DATABASE_EMPTY + "}\n";
         StringBuilder result = new StringBuilder("{\n[DatabaseName: " + databaseName + "]\n");
         for (Table table : this.tableMap.values())
             if (table != null)

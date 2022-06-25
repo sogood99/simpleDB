@@ -16,6 +16,7 @@ public class QueryTable implements Iterator<Row> {
     private List<Row> rows;
     private List<String> columnNames;
     private Iterator<Row> rowListIterator;
+    private String tableName = "";
 
     private List<String> column2ColumnName(List<Column> columns) {
         List<String> columnNames = new ArrayList<>();
@@ -33,13 +34,14 @@ public class QueryTable implements Iterator<Row> {
         rowListIterator = rows.iterator();
     }
 
-//    public QueryTable(List<Row> tRows, List<Column> columns) {
-//        // TODO
-//        rows = new ArrayList<>(tRows);
-//        columnNames = column2ColumnName(columns);
-//
-//        rowListIterator = rows.iterator();
-//    }
+    public QueryTable(List<Row> tRows, List<String> tColumnNames, String tname) {
+        // TODO: finished
+        rows = new ArrayList<>(tRows);
+        columnNames = tColumnNames;
+        tableName = tname;
+
+        rowListIterator = rows.iterator();
+    }
 
     public QueryTable(Table t) {
         // TODO: finished
@@ -51,6 +53,8 @@ public class QueryTable implements Iterator<Row> {
             Row r = rowIterator.next();
             rows.add(r);
         }
+
+        tableName = t.tableName;
 
         rowListIterator = rows.iterator();
     }
@@ -72,6 +76,10 @@ public class QueryTable implements Iterator<Row> {
             return null;
         }
         return rows.get(0);
+    }
+
+    public String getTableName() {
+        return tableName;
     }
 
     public List<String> getColumnNames() {

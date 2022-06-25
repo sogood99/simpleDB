@@ -6,9 +6,7 @@ import cn.edu.thssdb.common.Global;
 import cn.edu.thssdb.common.Pair;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
+import java.util.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static cn.edu.thssdb.type.ColumnType.STRING;
@@ -25,6 +23,9 @@ public class Table implements Iterable<Row> {
     private int primaryIndex;
 
     // ADD lock variables for S, X locks and etc here.
+
+    private Set<Long> sLockSet = new HashSet<>();
+    private Set<Long> xLockSet = new HashSet<>();
 
     // TODO: table/tuple level locks
     public Boolean testSLock(Long sessionId) {
