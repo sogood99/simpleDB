@@ -6,6 +6,7 @@ import cn.edu.thssdb.exception.DatabaseNotExistException;
 import cn.edu.thssdb.exception.TypeNotMatchException;
 import cn.edu.thssdb.exception.ValueFormatInvalidException;
 import cn.edu.thssdb.query.QueryResult;
+import cn.edu.thssdb.query.QueryTable;
 import cn.edu.thssdb.schema.*;
 import cn.edu.thssdb.type.ColumnType;
 
@@ -117,7 +118,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
 
     /**
      * TODO: finished
-     * 创建表格
+     * 创建表格 create
      * supports create table table_name ( attr1 type1, attr2 type2, attr3 type3 not null primary key)
      *          create table table_name ( attr1 type1, attr2 type2, attr3 type3 not null, PRIMARY KEY (attr1) )
      */
@@ -164,7 +165,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
                         isPrimary = 1;
                     }
                 }
-                Column column = new Column(ctx.table_name().getText(), columnType, isPrimary, notNull, maxLen);
+                Column column = new Column(ctx.column_def(i).column_name().getText(), columnType, isPrimary, notNull, maxLen);
                 columnList.add(column);
             }
             GetCurrentDB().create(ctx.table_name().getText(), columnList.toArray(new Column[0]));
@@ -176,7 +177,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
 
     /**
      * TODO: finished
-     * 表格项插入
+     * 表格项插入 insert
      */
     @Override
     public String visitInsert_stmt(SQLParser.Insert_stmtContext ctx) {
@@ -229,7 +230,9 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
 
     /**
      * TODO
-     * 表格项删除
+     * 表格项删除 delete
+     * DELETE FROM table1;
+     * DELETE FROM table1 WHERE attr1=value1;
      */
     @Override
     public String visitDelete_stmt(SQLParser.Delete_stmtContext ctx) {
@@ -238,7 +241,9 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
 
     /**
      * TODO
-     * 表格项更新
+     * 表格项更新 update
+     * UPDATE tableName SET attr1=value1;
+     * UPDATE tableName SET attr1=value1 WHERE attr2=value2;
      */
     @Override
     public String visitUpdate_stmt(SQLParser.Update_stmtContext ctx) {
@@ -247,14 +252,20 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
 
     /**
      * TODO
-     * 表格项查询
+     * 表格查询 select
+     * SELECT column1 FROM table1
+     * SELECT column1, column2 FROM table1, table2 WHERE attr1=value1
+     * SELECT table1.column1, table2.column2 FROM table1, table2 WHERE table1.attr1=table2.attr1
      */
     @Override
     public QueryResult visitSelect_stmt(SQLParser.Select_stmtContext ctx) {
+        List<QueryTable> queryTables = new ArrayList<>();
         for (int i = 0; i < ctx.table_query().size(); i++) {
-            System.out.println(ctx.table_query(i));
+            System.out.println(ctx.table_query(i).getText());
+            QueryTable qt = new QueryTable(GetCurrentDB().get(ctx.table_query(i).getText()));
+            queryTables.add(qt);
         }
-        return new QueryResult("Select not set");
+        return GetCurrentDB().select(queryTables.toArray(new QueryTable[0]));
     }
 
     /**

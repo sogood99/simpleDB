@@ -29,7 +29,7 @@ public class QueryResult {
 
     public List<Row> results;
 
-    public QueryResult(QueryTable[] queryTables) {
+    public QueryResult(QueryTable queryTable) {
         this.resultType = QueryResultType.SELECT;
         this.errorMessage = null;
         // TODO : finished
@@ -38,16 +38,8 @@ public class QueryResult {
         results = new ArrayList<>();
         metaInfoInfos = new ArrayList<>();
 
-        if (queryTables.length != 0) {
-            for (Column col : queryTables[0].getColumns()) {
-                columnNames.add(col.getColumnName());
-            }
-        }
-        for (QueryTable qt : queryTables) {
-            while (qt.hasNext()) {
-                results.add(qt.next());
-            }
-        }
+        columnNames.addAll(queryTable.getColumnNames());
+        results.addAll(queryTable.getRow());
     }
 
     public QueryResult(String errorMessage) {
@@ -63,6 +55,14 @@ public class QueryResult {
         }
         Row resultRow = new Row((ArrayList<Cell>) cellList);
         return resultRow;
+    }
+
+    public static List<String> combineColumn(LinkedList<List<String>> columnNames) {
+        List<String> concatColumnNames = new ArrayList<>();
+        for (List<String> indColumnName : columnNames) {
+            concatColumnNames.addAll(indColumnName);
+        }
+        return concatColumnNames;
     }
 
     public Row generateQueryRecord(Row row) {

@@ -10,6 +10,8 @@ import cn.edu.thssdb.common.Global;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 
@@ -156,10 +158,38 @@ public class Database {
 
 
     // TODO Query: please also add other functions needed at Database level.
-    public String select(QueryTable[] queryTables) {
+    public QueryResult select(QueryTable[] queryTables) {
         // TODO: support select operations
-        QueryResult queryResult = new QueryResult(queryTables);
-        return null;
+        // return combined row from select from query table
+        List<Row> rowList = new ArrayList<>();
+        List<String> columnNames = new ArrayList<>();
+
+        System.out.println(queryTables.length);
+
+        if (queryTables.length == 1) {
+            rowList.addAll(queryTables[0].getRow());
+            columnNames.addAll(queryTables[0].getColumnNames());
+        } else if (queryTables.length == 2) {
+            List<Row> concatedRow = new ArrayList<>();
+
+            LinkedList<List<String>> columnNameList = new LinkedList<>(List.of(queryTables[0].getColumnNames(),
+                    queryTables[1].getColumnNames()));
+            for (int i = 0; i < queryTables.length; i++) {
+                for (int j = 0; j < queryTables.length; j++) {
+                    LinkedList<Row> rowPair = new LinkedList<>();
+
+                    rowPair.add(queryTables[0].getRow(i));
+                    rowPair.add(queryTables[1].getRow(j));
+                    concatedRow.add(QueryResult.combineRow(rowPair));
+                }
+            }
+            rowList.addAll(concatedRow);
+            columnNames.addAll(QueryResult.combineColumn(columnNameList));
+            System.out.println(columnNames);
+        } else {
+            return new QueryResult("Doesnt support select from more than 2 tables");
+        }
+        return new QueryResult(new QueryTable(rowList, columnNames));
     }
 
 

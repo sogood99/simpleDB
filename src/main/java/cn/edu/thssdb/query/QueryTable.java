@@ -2,6 +2,7 @@ package cn.edu.thssdb.query;
 
 import cn.edu.thssdb.schema.Column;
 import cn.edu.thssdb.schema.Row;
+import cn.edu.thssdb.schema.Table;
 
 import java.util.*;
 
@@ -13,13 +14,44 @@ import java.util.*;
 
 public class QueryTable implements Iterator<Row> {
     private List<Row> rows;
-    private List<Column> columns;
+    private List<String> columnNames;
     private Iterator<Row> rowListIterator;
 
-    QueryTable(List<Row> tRows, List<Column> tColumns) {
-        // TODO :
+    private List<String> column2ColumnName(List<Column> columns) {
+        List<String> columnNames = new ArrayList<>();
+        for (Column c : columns) {
+            columnNames.add(c.getColumnName());
+        }
+        return columnNames;
+    }
+
+    public QueryTable(List<Row> tRows, List<String> tColumnNames) {
+        // TODO
         rows = new ArrayList<>(tRows);
-        columns = new ArrayList<>(tColumns);
+        columnNames = tColumnNames;
+
+        rowListIterator = rows.iterator();
+    }
+
+//    public QueryTable(List<Row> tRows, List<Column> columns) {
+//        // TODO
+//        rows = new ArrayList<>(tRows);
+//        columnNames = column2ColumnName(columns);
+//
+//        rowListIterator = rows.iterator();
+//    }
+
+    public QueryTable(Table t) {
+        // TODO
+        rows = new ArrayList<>();
+        columnNames = column2ColumnName(t.columns);
+
+        Iterator<Row> rowIterator = t.iterator();
+        while (rowIterator.hasNext()) {
+            Row r = rowIterator.next();
+            rows.add(r);
+        }
+
         rowListIterator = rows.iterator();
     }
 
@@ -42,7 +74,15 @@ public class QueryTable implements Iterator<Row> {
         return rows.get(0);
     }
 
-    public List<Column> getColumns() {
-        return columns;
+    public List<String> getColumnNames() {
+        return columnNames;
+    }
+
+    public List<Row> getRow() {
+        return rows;
+    }
+
+    public Row getRow(int i) {
+        return rows.get(i);
     }
 }
