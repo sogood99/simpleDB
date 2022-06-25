@@ -172,8 +172,8 @@ public class Database {
         // return combined row from select from query table
         try {
             lock.readLock().lock();
-            List<Row> rowList = new ArrayList<>();
-            List<String> columnNames = new ArrayList<>();
+            ArrayList<Row> rowList = new ArrayList<>();
+            ArrayList<String> columnNames = new ArrayList<>();
 
             if (queryTables.length == 1) {
                 rowList.addAll(queryTables[0].getRow());
@@ -181,7 +181,7 @@ public class Database {
                     columnNames.add(queryTables[0].getTableName() + "." + cName);
                 }
             } else if (queryTables.length == 2) {
-                List<Row> concatRow = new ArrayList<>();
+                ArrayList<Row> concatRow = new ArrayList<>();
 
                 for (int i = 0; i < queryTables[0].getRow().size(); i++) {
                     for (int j = 0; j < queryTables[1].getRow().size(); j++) {
@@ -213,14 +213,35 @@ public class Database {
                         return new QueryResult("Column Name Not Found");
                     }
                 }
-                columnNames = resultColumn;
+                columnNames = (ArrayList<String>) resultColumn;
             } else {
                 for (int i = 0; i < columnNames.size(); i++) {
                     columnIndexFromResult.add(i);
                 }
             }
 
-            ArrayList<Row> projectedRow = new ArrayList<>();
+            if (onEqualStatement != null) {
+                int leftMatchIndex = columnNames.indexOf(onEqualStatement.get(0));
+                int rightMatchIndex = columnNames.indexOf(onEqualStatement.get(1));
+                if (leftMatchIndex != -1 && rightMatchIndex != -1) {
+                    rowList.removeIf(row -> row.getEntries().get(leftMatchIndex)
+                            != row.getEntries().get(rightMatchIndex));
+                } else {
+                    return new QueryResult("Column Name Not Found for ON");
+                }
+            }
+
+            if (whereEqualStatement != null) {
+                int matchIndex = columnNames.indexOf(whereEqualStatement.get(0));
+                if (matchIndex != -1) {
+                    rowList.removeIf(row -> !row.getEntries().get(matchIndex).toString()
+                            .equals(whereEqualStatement.get(1)));
+                } else {
+                    return new QueryResult("Column Name Not Found for ON");
+                }
+            }
+
+            ArrayList<Row> projectedRows = new ArrayList<>();
 
             // everything is good, we have a match for each query
             for (int i = 0; i < rowList.size(); i++) {
@@ -232,11 +253,11 @@ public class Database {
                 }
 
                 Row targetRow = new Row(newRowCellList);
-                projectedRow.add(targetRow);
+                projectedRows.add(targetRow);
             }
 
 
-            return new QueryResult(new QueryTable(projectedRow, columnNames));
+            return new QueryResult(new QueryTable(projectedRows, columnNames));
 
             // gives rowList that is concatenated
             // then filter by on
