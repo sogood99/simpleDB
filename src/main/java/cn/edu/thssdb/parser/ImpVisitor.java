@@ -229,14 +229,34 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
     }
 
     /**
-     * TODO
+     * TODO finished
      * 表格项删除 delete
      * DELETE FROM table1;
      * DELETE FROM table1 WHERE attr1=value1;
      */
     @Override
     public String visitDelete_stmt(SQLParser.Delete_stmtContext ctx) {
-        return null;
+        String tableName = ctx.table_name().getText();
+        Table table = GetCurrentDB().get(tableName);
+        String[] condition = ctx.multiple_condition().getText().split("=");
+
+        if (ctx.K_WHERE() == null){
+            for (Row row : table) {
+                GetCurrentDB().get(tableName).delete(row);
+            }
+        } else {
+            int cnt = 0;
+            for (Column column: table.columns) {
+                if (condition[0].equals(column.getColumnName())) break;
+                cnt++;
+            }
+            for (Row row : table) {
+                if (condition[1].equals(row.toStringList().get(cnt))) {
+                    GetCurrentDB().get(tableName).delete(row);
+                }
+            }
+        }
+        return "Delete from " + ctx.table_name().getText() + " successfully.";
     }
 
     /**
