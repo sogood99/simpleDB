@@ -58,6 +58,8 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
         if (ctx.delete_stmt() != null) return new QueryResult(visitDelete_stmt(ctx.delete_stmt()));
         if (ctx.update_stmt() != null) return new QueryResult(visitUpdate_stmt(ctx.update_stmt()));
         if (ctx.select_stmt() != null) return visitSelect_stmt(ctx.select_stmt());
+        if (ctx.show_table_stmt() != null) return visitShow_table_stmt(ctx.show_table_stmt());
+        if (ctx.show_meta_stmt() != null) return visitShow_meta_stmt(ctx.show_meta_stmt());
         if (ctx.quit_stmt() != null) return new QueryResult(visitQuit_stmt(ctx.quit_stmt()));
         return null;
     }
@@ -113,6 +115,31 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
             return e.getMessage();
         }
         return "Drop table " + ctx.table_name().getText() + ".";
+    }
+
+    /**
+     * 展示表格
+     * SHOW TABLE tableName;
+     */
+    @Override
+    public QueryResult visitShow_meta_stmt(SQLParser.Show_meta_stmtContext ctx) {
+        String returnText = "Table name : " + ctx.table_name().getText() + "\n";
+
+        Table table = GetCurrentDB().get(ctx.table_name().getText());
+        for (Column column : table.columns) {
+            returnText += "\t" + column.getColumnName() + " : " + column.getColumnType().name();
+            if (column.getColumnType() == ColumnType.STRING) {
+                returnText += "(" + column.getMaxLength() + ")";
+            }
+            if (column.cantBeNull()) {
+                returnText += " NOT NULL";
+            }
+            if (column.isPrimary()) {
+                returnText += " PRIMARY KEY";
+            }
+            returnText += "\n";
+        }
+        return new QueryResult(returnText);
     }
 
     /**
@@ -364,14 +391,14 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
         return "Quit.";
     }
 
-    /**
-     * TODO Just redirect to SELECT * from tableName
-     * 展示表格
-     * SHOW TABLE tableName;
-     */
     @Override
     public QueryResult visitShow_table_stmt(SQLParser.Show_table_stmtContext ctx) {
-        return null;
+        return new QueryResult("SHOW ata");
+    }
+
+    @Override
+    public Object visitShow_db_stmt(SQLParser.Show_db_stmtContext ctx) {
+        return new QueryResult("SHOW ata");
     }
 
     public Object visitParse(SQLParser.ParseContext ctx) {
