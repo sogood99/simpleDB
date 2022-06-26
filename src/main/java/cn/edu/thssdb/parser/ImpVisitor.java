@@ -58,7 +58,6 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
         if (ctx.delete_stmt() != null) return new QueryResult(visitDelete_stmt(ctx.delete_stmt()));
         if (ctx.update_stmt() != null) return new QueryResult(visitUpdate_stmt(ctx.update_stmt()));
         if (ctx.select_stmt() != null) return visitSelect_stmt(ctx.select_stmt());
-        if (ctx.show_table_stmt() != null) return visitShow_table_stmt(ctx.show_table_stmt());
         if (ctx.show_meta_stmt() != null) return visitShow_meta_stmt(ctx.show_meta_stmt());
         if (ctx.quit_stmt() != null) return new QueryResult(visitQuit_stmt(ctx.quit_stmt()));
         return null;
@@ -119,30 +118,6 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
         return "Drop table " + ctx.table_name().getText() + ".";
     }
 
-    /**
-     * 展示表格
-     * SHOW TABLE tableName;
-     */
-    @Override
-    public QueryResult visitShow_meta_stmt(SQLParser.Show_meta_stmtContext ctx) {
-        String returnText = "Table name : " + ctx.table_name().getText() + "\n";
-
-        Table table = GetCurrentDB().get(ctx.table_name().getText());
-        for (Column column : table.columns) {
-            returnText += "\t" + column.getColumnName() + " : " + column.getColumnType().name();
-            if (column.getColumnType() == ColumnType.STRING) {
-                returnText += "(" + column.getMaxLength() + ")";
-            }
-            if (column.cantBeNull()) {
-                returnText += " NOT NULL";
-            }
-            if (column.isPrimary()) {
-                returnText += " PRIMARY KEY";
-            }
-            returnText += "\n";
-        }
-        return new QueryResult(returnText);
-    }
 
     /**
      * TODO: finished
@@ -372,6 +347,21 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
      */
     @Override
     public QueryResult visitSelect_stmt(SQLParser.Select_stmtContext ctx) {
+        ArrayList<String> tableName = new ArrayList<>();
+        ArrayList<Table> tables = new ArrayList<>();
+
+        for (SQLParser.Table_nameContext table_nameContext : ctx.table_query(0).table_name()) {
+            Table queryTable = GetCurrentDB().get(table_nameContext.getText());
+
+            tableName.add(table_nameContext.getText());
+            tables.add(queryTable);
+
+            if (!queryTable.testSLock(session)) {
+                return new QueryResult(RETRIEVE_LOCK_FAILED_MSG);
+            }
+            queryTable.takeSLock(session);
+        }
+
         List<QueryTable> queryTables = new ArrayList<>();
         for (int i = 0; i < ctx.table_query(0).table_name().size(); i++) {
             queryTables.add(new QueryTable(GetCurrentDB().get(ctx.table_query(0).table_name(i).getText())));
@@ -397,7 +387,43 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
             resultColumns.add(res.getText());
         }
 
+        for (Table queryTable : tables) {
+            queryTable.releaseSLock(session);
+        }
+
         return GetCurrentDB().select(queryTables.toArray(new QueryTable[0]), resultColumns, onEqualStatement, whereEqualStatement);
+    }
+
+    /**
+     * 展示表格
+     * SHOW TABLE tableName;
+     */
+    @Override
+    public QueryResult visitShow_meta_stmt(SQLParser.Show_meta_stmtContext ctx) {
+        String tableName = ctx.table_name().getText();
+        Table table = GetCurrentDB().get(tableName);
+        if (!table.testSLock(session)) {
+            return new QueryResult(RETRIEVE_LOCK_FAILED_MSG);
+        }
+        table.takeSLock(session);
+
+        String returnText = "Table name : " + tableName + "\n";
+
+        for (Column column : table.columns) {
+            returnText += "\t" + column.getColumnName() + " : " + column.getColumnType().name();
+            if (column.getColumnType() == ColumnType.STRING) {
+                returnText += "(" + column.getMaxLength() + ")";
+            }
+            if (column.cantBeNull()) {
+                returnText += " NOT NULL";
+            }
+            if (column.isPrimary()) {
+                returnText += " PRIMARY KEY";
+            }
+            returnText += "\n";
+        }
+        table.releaseSLock(session);
+        return new QueryResult(returnText);
     }
 
     /**
@@ -411,16 +437,6 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
             return e.getMessage();
         }
         return "Quit.";
-    }
-
-    @Override
-    public QueryResult visitShow_table_stmt(SQLParser.Show_table_stmtContext ctx) {
-        return new QueryResult("SHOW ata");
-    }
-
-    @Override
-    public Object visitShow_db_stmt(SQLParser.Show_db_stmtContext ctx) {
-        return new QueryResult("SHOW ata");
     }
 
     public Object visitParse(SQLParser.ParseContext ctx) {
