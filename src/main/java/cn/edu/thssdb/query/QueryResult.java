@@ -1,9 +1,7 @@
 package cn.edu.thssdb.query;
 
 
-import cn.edu.thssdb.exception.ValueFormatInvalidException;
 import cn.edu.thssdb.schema.Cell;
-import cn.edu.thssdb.schema.Column;
 import cn.edu.thssdb.schema.MetaInfo;
 import cn.edu.thssdb.schema.Row;
 import cn.edu.thssdb.type.QueryResultType;
@@ -66,10 +64,8 @@ public class QueryResult {
     }
 
     public Row generateQueryRecord(Row row) {
-        // TODO: probably no use
-//        metaInfoInfos.add(new MetaInfo("tempTable", columnNames));
-        throw new ValueFormatInvalidException("Not doing this rn");
-//        return null;
+        results.add(row);
+        return row;
     }
 
     public List<String> getColumnNames() {

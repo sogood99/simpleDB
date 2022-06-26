@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 
-// TODO: lock control
+// TODO: lock control : finished
 // TODO Query: please also add other functions needed at Database level.
 
 public class Database {
@@ -166,6 +166,7 @@ public class Database {
 
 
     // TODO Query: please also add other functions needed at Database level.
+
     public QueryResult select(QueryTable[] queryTables, List<String> resultColumn, List<String> onEqualStatement,
                               List<String> whereEqualStatement) {
         // TODO: support select operations
@@ -244,9 +245,7 @@ public class Database {
             ArrayList<Row> projectedRows = new ArrayList<>();
 
             // everything is good, we have a match for each query
-            for (int i = 0; i < rowList.size(); i++) {
-                Row srcRow = rowList.get(i);
-
+            for (Row srcRow : rowList) {
                 ArrayList<Cell> newRowCellList = new ArrayList<>();
                 for (int index : columnIndexFromResult) {
                     newRowCellList.add(new Cell(srcRow.getEntries().get(index)));

@@ -24,29 +24,44 @@ public class Table implements Iterable<Row> {
 
     // ADD lock variables for S, X locks and etc here.
 
-    private Set<Long> sLockSet = new HashSet<>();
-    private Set<Long> xLockSet = new HashSet<>();
+    private Set<Long> sLockSet;
+    private Set<Long> xLockSet;
 
     // TODO: table/tuple level locks
+    private Boolean hasLock(Long sessionId) {
+        // check if session already has a lock on table
+        return sLockSet.contains(sessionId) || xLockSet.contains(sessionId);
+    }
+
     public Boolean testSLock(Long sessionId) {
-        return false;
+        return xLockSet.isEmpty() && hasLock(sessionId);
     }
 
     public void takeSLock(Long sessionId) {
+        sLockSet.add(sessionId);
     }
 
     public void releaseSLock(Long sessionId) {
+        sLockSet.remove(sessionId);
     }
 
     public Boolean testXLock(Long sessionId) {
-        return false;
+        return sLockSet.isEmpty() && (xLockSet.isEmpty() || xLockSet.contains(sessionId));
     }
 
     public Boolean takeXLock(Long sessionId) {
-        return false;
+        if (xLockSet.contains(sessionId)) {
+            return false;
+        }
+        // check just in case
+        assert xLockSet.isEmpty();
+
+        xLockSet.add(sessionId);
+        return true;
     } // 在test成功前提下拿X锁。返回值false表示session之前已拥有这个表的X锁。
 
     public void releaseXLock(Long sessionId) {
+        xLockSet.remove(sessionId);
     }
 
 
@@ -70,6 +85,8 @@ public class Table implements Iterable<Row> {
             throw new MultiPrimaryKeyException(this.tableName);
 
         // TODO initiate lock status.
+        xLockSet = new HashSet<>();
+        sLockSet = new HashSet<>();
 
         recover();
     }
@@ -77,12 +94,14 @@ public class Table implements Iterable<Row> {
     private void recover() {
         // read from disk for recovering
         try {
-            // TODO lock control
+            // TODO lock control : finished
+            lock.writeLock().lock();
             ArrayList<Row> rowsOnDisk = deserialize();
             for (Row row : rowsOnDisk)
                 this.index.put(row.getEntries().get(this.primaryIndex), row);
         } finally {
-            // TODO lock control
+            // TODO lock control : finished
+            lock.writeLock().unlock();
         }
     }
 
@@ -92,40 +111,47 @@ public class Table implements Iterable<Row> {
 
     public Row get(Cell primaryCell) {
         try {
-            // TODO lock control
+            // TODO lock control : finished
+            lock.readLock().lock();
             return this.index.get(primaryCell);
         } finally {
-            // TODO lock control
+            // TODO lock control : finished
+            lock.readLock().unlock();
         }
     }
 
     public void insert(Row row) {
         try {
-            // TODO lock control
+            // TODO lock control : finished
+            lock.writeLock().lock();
             this.checkRowValidInTable(row);
             if (this.containsRow(row))
                 throw new DuplicateKeyException();
             this.index.put(row.getEntries().get(this.primaryIndex), row);
         } finally {
-            // TODO lock control
+            // TODO lock control : finished
+            lock.writeLock().unlock();
         }
     }
 
     public void delete(Row row) {
         try {
-            // TODO lock control.
+            // TODO lock control. : finished
+            lock.writeLock().lock();
             this.checkRowValidInTable(row);
             if (!this.containsRow(row))
                 throw new KeyNotExistException();
             this.index.remove(row.getEntries().get(this.primaryIndex));
         } finally {
-            // TODO lock control.
+            // TODO lock control. finished
+            lock.writeLock().unlock();
         }
     }
 
     public void update(Cell primaryCell, Row newRow) {
         try {
-            // TODO lock control.
+            // TODO lock control. : finished
+            lock.writeLock().lock();
             this.checkRowValidInTable(newRow);
             Row oldRow = this.get(primaryCell);
             if (this.containsRow(newRow))
@@ -133,7 +159,8 @@ public class Table implements Iterable<Row> {
             this.index.remove(primaryCell);
             this.index.put(newRow.getEntries().get(this.primaryIndex), newRow);
         } finally {
-            // TODO lock control.
+            // TODO lock control. : finished
+            lock.writeLock().unlock();
         }
     }
 
@@ -184,16 +211,19 @@ public class Table implements Iterable<Row> {
 
     public void persist() {
         try {
-            // TODO add lock control.
+            // TODO add lock control. : finished
+            lock.readLock().lock();
             serialize();
         } finally {
-            // TODO add lock control.
+            // TODO add lock control. : finished
+            lock.readLock().unlock();
         }
     }
 
     public void dropTable() { // remove table data file
         try {
-            // TODO lock control.
+            // TODO lock control. : finished
+            lock.writeLock().lock();
             File tableFolder = new File(this.getTableFolderPath());
             if (!tableFolder.exists() ? !tableFolder.mkdirs() : !tableFolder.isDirectory())
                 throw new FileIOException(this.getTableFolderPath() + " when dropTable");
@@ -201,7 +231,8 @@ public class Table implements Iterable<Row> {
             if (tableFile.exists() && !tableFile.delete())
                 throw new FileIOException(this.getTablePath() + " when dropTable");
         } finally {
-            // TODO lock control.
+            // TODO lock control. : finished
+            lock.writeLock().unlock();
         }
     }
 
