@@ -186,7 +186,8 @@ public class Manager {
 
                 // get a sessionId not used
                 while ((line = bufferedReader.readLine()) != null) {
-                    sqlHandler.evaluate(line, 0);
+//                    sqlHandler.evaluate(line, 0);
+                    System.out.println(line);
                 }
                 bufferedReader.close();
                 reader.close();

@@ -22,6 +22,7 @@ public class SQLHandler {
     private final static String UPDATE = "update";
     private final static String BEGIN = "begin";
     private final static String COMMIT = "commit";
+   
     private final static String SELECT = "select";
     private static String[] CMD_SET_WITHOUT_SELECT = {INSERT, DELETE, UPDATE, BEGIN, COMMIT};
 
