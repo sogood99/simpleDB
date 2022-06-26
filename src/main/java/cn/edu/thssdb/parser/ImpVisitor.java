@@ -64,6 +64,8 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
         return null;
     }
 
+    private final String RETRIEVE_LOCK_FAILED_MSG = "Table is already in use, change failed.";
+
     /**
      * 创建数据库
      */
@@ -233,6 +235,14 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
      */
     @Override
     public String visitInsert_stmt(SQLParser.Insert_stmtContext ctx) {
+        String tableName = ctx.table_name().getText();
+        Table table = GetCurrentDB().get(tableName);
+        if (!table.testXLock(session)) {
+            return RETRIEVE_LOCK_FAILED_MSG;
+        }
+        manager.x_lockDict.get(session).add(tableName);
+        table.takeXLock(session);
+
         List<Column> column = manager.currentDatabase.get(ctx.table_name().getText()).columns;
         for (int i = 0; i < ctx.value_entry().size(); i++) {
             SQLParser.Value_entryContext valueEntry = ctx.value_entry(i);
@@ -270,6 +280,11 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
     public String visitDelete_stmt(SQLParser.Delete_stmtContext ctx) {
         String tableName = ctx.table_name().getText();
         Table table = GetCurrentDB().get(tableName);
+        if (!table.testXLock(session)) {
+            return RETRIEVE_LOCK_FAILED_MSG;
+        }
+        manager.x_lockDict.get(session).add(tableName);
+        table.takeXLock(session);
 
         if (ctx.multiple_condition() == null) {
             for (Pair<Cell, Row> cellRowPair : table.index) {
@@ -309,6 +324,13 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
     public String visitUpdate_stmt(SQLParser.Update_stmtContext ctx) {
         String tableName = ctx.table_name().getText();
         Table table = GetCurrentDB().get(tableName);
+
+        if (!table.testXLock(session)) {
+            return RETRIEVE_LOCK_FAILED_MSG;
+        }
+        manager.x_lockDict.get(session).add(tableName);
+        table.takeXLock(session);
+
         String attr1 = ctx.column_name().getText();
         String val1 = ctx.expression().getText();
         String[] condition = ctx.multiple_condition().getText().split("=");
