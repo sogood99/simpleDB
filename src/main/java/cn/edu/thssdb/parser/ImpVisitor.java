@@ -236,18 +236,26 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
     /**
      * TODO finished
      * 表格项删除 delete
-     * DELETE FROM table1;
+     * DELETE FROM table1
      * DELETE FROM table1 WHERE attr1=value1;
      */
     @Override
     public String visitDelete_stmt(SQLParser.Delete_stmtContext ctx) {
         String tableName = ctx.table_name().getText();
         Table table = GetCurrentDB().get(tableName);
+
+        if (ctx.multiple_condition() == null) {
+            for (Pair<Cell, Row> cellRowPair : table.index) {
+                table.delete(cellRowPair.right);
+            }
+            return "Delete from " + ctx.table_name().getText() + " successfully.";
+        }
+
         String[] condition = ctx.multiple_condition().getText().split("=");
 
         if (ctx.K_WHERE() == null) {
             for (Row row : table) {
-                GetCurrentDB().get(tableName).delete(row);
+                table.delete(row);
             }
         } else {
             int cnt = 0;
@@ -257,7 +265,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
             }
             for (Row row : table) {
                 if (condition[1].equals(row.toStringList().get(cnt))) {
-                    GetCurrentDB().get(tableName).delete(row);
+                    table.delete(row);
                 }
             }
         }
@@ -298,9 +306,8 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
             if (condition[1].equals(index.right.toStringList().get(queryIndex))) {
                 Row newRow = new Row(index.right);
                 newRow.getEntries().set(attrIndex, getCellFromType(val1, attrColumn));
-                if (index.right == newRow) {
-                    GetCurrentDB().get(tableName).update(index.left, index.right);
-                }
+
+                GetCurrentDB().get(tableName).update(index.left, newRow);
             }
         }
         return "Updated table.";
