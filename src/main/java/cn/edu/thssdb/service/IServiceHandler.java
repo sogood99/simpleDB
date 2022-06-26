@@ -31,6 +31,12 @@ public class IServiceHandler implements IService.Iface {
     private final static String DELETE = "delete";
     private final static String SELECT = "select";
     private final static String[] CMD_HEADS = {INSERT, UPDATE, DELETE, SELECT};
+
+    private final static String BEGIN = "begin transaction";
+
+    private final static String COMMIT = "commit";
+
+    private final static String[] CMD_TRANSACTION = {BEGIN, COMMIT};
     public static SQLHandler sqlHandler;
 
     public IServiceHandler() {
@@ -84,12 +90,30 @@ public class IServiceHandler implements IService.Iface {
             statement = statement.trim();
             if (statement.length() == 0) continue;
             String cmd_head = command.split("\\s+")[0];
-            ArrayList<QueryResult> queryResults;
-            if ((Arrays.asList(CMD_HEADS).contains(cmd_head.toLowerCase())) && !manager.currentSessions.contains(session)) {
-                sqlHandler.evaluate("begin transaction", session);
-                queryResults = sqlHandler.evaluate(statement, session);
-                sqlHandler.evaluate("commit", session);
+            ArrayList<QueryResult> queryResults = new ArrayList<>();
+
+            if (statement.equalsIgnoreCase(BEGIN)) {
+                if (!manager.currentSessions.contains(session)) {
+                    sqlHandler.evaluate(statement, session);
+                    queryResults.add(new QueryResult("Successfully Began Transaction"));
+                } else {
+                    queryResults.add(new QueryResult("Already in transaction"));
+                }
+            } else if (statement.equalsIgnoreCase(COMMIT)) {
+                if (manager.currentSessions.contains(session)) {
+                    sqlHandler.evaluate(statement, session);
+                    queryResults.add(new QueryResult("Successfully commit"));
+                } else {
+                    queryResults.add(new QueryResult("Please begin transaction before commit"));
+                }
+            } else if (Arrays.asList(CMD_HEADS).contains(cmd_head.toLowerCase())) {
+                if (manager.currentSessions.contains(session)) {
+                    queryResults = sqlHandler.evaluate(statement, session);
+                } else {
+                    queryResults.add(new QueryResult("Please begin transaction"));
+                }
             } else queryResults = sqlHandler.evaluate(statement, session);
+
             if (queryResults == null || queryResults.size() == 0) {
                 resp.setStatus(new Status(Global.SUCCESS_CODE));
                 resp.setIsAbort(true);

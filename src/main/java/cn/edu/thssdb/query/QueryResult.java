@@ -1,6 +1,5 @@
 package cn.edu.thssdb.query;
 
-
 import cn.edu.thssdb.schema.Cell;
 import cn.edu.thssdb.schema.MetaInfo;
 import cn.edu.thssdb.schema.Row;
@@ -46,7 +45,7 @@ public class QueryResult {
     }
 
     public static Row combineRow(LinkedList<Row> rows) {
-        // TODO
+        // TODO : finished
         List<Cell> cellList = new ArrayList<>();
         for (Row r : rows) {
             cellList.addAll(r.getEntries());

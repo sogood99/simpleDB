@@ -9,7 +9,6 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -185,16 +184,31 @@ public class Manager {
                 BufferedReader bufferedReader = new BufferedReader(reader);
 
                 // get a sessionId not used
+                boolean lastLineIsCommit = true;
                 while ((line = bufferedReader.readLine()) != null) {
-                    sqlHandler.evaluate(line, 0);
+                    if (line.equalsIgnoreCase("begin transaction")) {
+                        if (!lastLineIsCommit) {
+                            sqlHandler.evaluate("commit", 1);
+                        }
+                    }
+
+                    sqlHandler.evaluate(line, 1);
+
+                    if (line.equalsIgnoreCase("commit")) {
+                        lastLineIsCommit = true;
+                    } else {
+                        lastLineIsCommit = false;
+                    }
                 }
+                sqlHandler.evaluate("commit", 1);
+               
                 bufferedReader.close();
                 reader.close();
 
                 // clear log
-//                PrintWriter clearWriter = new PrintWriter(logFilename);
-//                clearWriter.print("");
-//                clearWriter.close();
+                PrintWriter clearWriter = new PrintWriter(logFilename);
+                clearWriter.print("");
+                clearWriter.close();
             }
         } catch (Exception e) {
             System.out.println(e.toString());

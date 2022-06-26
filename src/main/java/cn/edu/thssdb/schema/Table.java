@@ -28,13 +28,13 @@ public class Table implements Iterable<Row> {
     private Set<Long> xLockSet;
 
     // TODO: table/tuple level locks
-    private Boolean hasLock(Long sessionId) {
-        // check if session already has a lock on table
-        return sLockSet.contains(sessionId) || xLockSet.contains(sessionId);
-    }
+//    private Boolean hasLock(Long sessionId) {
+//        // check if session already has a lock on table
+//        return sLockSet.contains(sessionId) || xLockSet.contains(sessionId);
+//    }
 
     public Boolean testSLock(Long sessionId) {
-        return xLockSet.isEmpty() && hasLock(sessionId);
+        return xLockSet.isEmpty() || xLockSet.contains(sessionId);
     }
 
     public void takeSLock(Long sessionId) {
@@ -46,7 +46,8 @@ public class Table implements Iterable<Row> {
     }
 
     public Boolean testXLock(Long sessionId) {
-        return sLockSet.isEmpty() && (xLockSet.isEmpty() || xLockSet.contains(sessionId));
+        // check if sLock is empty or only contains themselves and there is no xlock on only by themselves
+        return (sLockSet.isEmpty() || (sLockSet.size() == 1 && sLockSet.contains(sessionId))) && (xLockSet.isEmpty() || xLockSet.contains(sessionId));
     }
 
     public Boolean takeXLock(Long sessionId) {
