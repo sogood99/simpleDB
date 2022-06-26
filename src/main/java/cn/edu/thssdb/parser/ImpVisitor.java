@@ -241,7 +241,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
             Row row = new Row(cells.toArray(new Cell[0]));
             GetCurrentDB().get(ctx.table_name().getText()).insert(row);
         }
-        return "Inserted into " + ctx.table_name().getText() + ".";
+        return "Inserted into " + ctx.table_name().getText() + " " + ctx.value_entry().size() + " rows.";
     }
 
     /**
@@ -330,7 +330,8 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
                 Row newRow = new Row(index.right);
                 newRow.getEntries().set(attrIndex, getCellFromType(val1, attrColumn));
 
-                GetCurrentDB().get(tableName).update(index.left, newRow);
+                GetCurrentDB().get(tableName).delete(index.right);
+                GetCurrentDB().get(tableName).insert(newRow);
             }
         }
         return "Updated table.";
@@ -406,7 +407,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
         }
         table.takeSLock(session);
 
-        String returnText = "Table name : " + tableName + "\n";
+        String returnText = "Table name : " + tableName + "\nRow Count : " + table.index.size() + "\n";
 
         for (Column column : table.columns) {
             returnText += "\t" + column.getColumnName() + " : " + column.getColumnType().name();
