@@ -34,7 +34,6 @@ public class Database {
         recover();
     }
 
-
     // Operations: (basic) persist, create tables
     private void persist() {
         // 把各表的元数据写到磁盘上
@@ -167,6 +166,29 @@ public class Database {
 
     // TODO Query: please also add other functions needed at Database level.
 
+    public QueryResult join(QueryTable lQueryTable, QueryTable rQueryTable) {
+        ArrayList<Row> rowArrayList = new ArrayList<>();
+        ArrayList<String> columnNames = new ArrayList<>();
+
+        for (int i = 0; i < lQueryTable.getRow().size(); i++) {
+            for (int j = 0; j < rQueryTable.getRow().size(); j++) {
+                LinkedList<Row> rowPair = new LinkedList<>();
+
+                rowPair.add(lQueryTable.getRow(i));
+                rowPair.add(rQueryTable.getRow(j));
+                rowArrayList.add(QueryResult.combineRow(rowPair));
+            }
+        }
+        // concat column names
+        for (String cName : lQueryTable.getColumnNames()) {
+            columnNames.add(lQueryTable.getTableName() + "." + cName);
+        }
+        for (String cName : rQueryTable.getColumnNames()) {
+            columnNames.add(rQueryTable.getTableName() + "." + cName);
+        }
+        return new QueryResult(new QueryTable(rowArrayList, columnNames));
+    }
+
     public QueryResult select(QueryTable[] queryTables, List<String> resultColumn, List<String> onEqualStatement,
                               List<String> whereEqualStatement) {
         // TODO: support select operations
@@ -182,25 +204,10 @@ public class Database {
                     columnNames.add(queryTables[0].getTableName() + "." + cName);
                 }
             } else if (queryTables.length == 2) {
-                ArrayList<Row> concatRow = new ArrayList<>();
+                QueryResult joinResult = join(queryTables[0], queryTables[1]);
 
-                for (int i = 0; i < queryTables[0].getRow().size(); i++) {
-                    for (int j = 0; j < queryTables[1].getRow().size(); j++) {
-                        LinkedList<Row> rowPair = new LinkedList<>();
-
-                        rowPair.add(queryTables[0].getRow(i));
-                        rowPair.add(queryTables[1].getRow(j));
-                        concatRow.add(QueryResult.combineRow(rowPair));
-                    }
-                }
-                rowList.addAll(concatRow);
-
-                // concat column names
-                for (int i = 0; i < 2; i++) {
-                    for (String cName : queryTables[i].getColumnNames()) {
-                        columnNames.add(queryTables[i].getTableName() + "." + cName);
-                    }
-                }
+                rowList.addAll(joinResult.results);
+                columnNames.addAll(joinResult.getColumnNames());
             }
             List<Integer> columnIndexFromResult = new ArrayList<>();
 
@@ -225,8 +232,12 @@ public class Database {
                 int leftMatchIndex = columnNames.indexOf(onEqualStatement.get(0));
                 int rightMatchIndex = columnNames.indexOf(onEqualStatement.get(1));
                 if (leftMatchIndex != -1 && rightMatchIndex != -1) {
-                    rowList.removeIf(row -> row.getEntries().get(leftMatchIndex)
-                            != row.getEntries().get(rightMatchIndex));
+                    rowList.removeIf(row -> {
+                        Comparable lVal = row.getEntries().get(leftMatchIndex).value;
+                        Comparable rVal = row.getEntries().get(rightMatchIndex).value;
+                        boolean neq = !lVal.equals(rVal);
+                        return neq;
+                    });
                 } else {
                     return new QueryResult("Column Name Not Found for ON");
                 }
@@ -257,12 +268,10 @@ public class Database {
 
 
             return new QueryResult(new QueryTable(projectedRows, columnNames));
-
-            // gives rowList that is concatenated
-            // then filter by on
         } finally {
             lock.readLock().unlock();
         }
+
     }
 
 

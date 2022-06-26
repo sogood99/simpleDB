@@ -183,16 +183,18 @@ public class Manager {
                 String line;
                 BufferedReader bufferedReader = new BufferedReader(reader);
 
-                // get a sessionId not used
+                System.out.println("Reading Data from Log");
+
+                int logSessionId = 999;
                 boolean lastLineIsCommit = true;
                 while ((line = bufferedReader.readLine()) != null) {
                     if (line.equalsIgnoreCase("begin transaction")) {
                         if (!lastLineIsCommit) {
-                            sqlHandler.evaluate("commit", 1);
+                            sqlHandler.evaluate("commit", logSessionId);
                         }
                     }
 
-                    sqlHandler.evaluate(line, 1);
+                    sqlHandler.evaluate(line, logSessionId);
 
                     if (line.equalsIgnoreCase("commit")) {
                         lastLineIsCommit = true;
@@ -200,8 +202,8 @@ public class Manager {
                         lastLineIsCommit = false;
                     }
                 }
-                sqlHandler.evaluate("commit", 1);
-               
+                sqlHandler.evaluate("commit", logSessionId);
+
                 bufferedReader.close();
                 reader.close();
 

@@ -160,7 +160,6 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
                 }
 
                 for (SQLParser.Column_constraintContext columnConstraint : ctx.column_def(i).column_constraint()) {
-                    System.out.println(columnConstraint);
                     if (columnConstraint.K_NOT() != null && columnConstraint.K_NULL() != null) {
                         notNull = true;
                     }
@@ -227,7 +226,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
                 SQLParser.Literal_valueContext value = valueEntry.literal_value(j);
                 Column currentCol = column.get(j);
                 if (value.STRING_LITERAL() != null) {
-                    String v = value.STRING_LITERAL().getText();
+                    String v = value.STRING_LITERAL().getText().replaceAll("'", "");
                     cells.add(new Cell(v));
                 } else if (value.NUMERIC_LITERAL() != null) {
                     String numericStr = value.NUMERIC_LITERAL().getText();
